@@ -151,6 +151,10 @@ We've investigate several cpu related kernel settings, and try to do some experi
 - [IRQ Affinity](https://wiki.linuxfoundation.org/realtime/documentation/howto/tools/cpu-partitioning/irqaffinity)
 - [Kubelet Reserved CPUs](https://kubernetes.io/docs/tasks/administer-cluster/reserve-compute-resources/#explicitly-reserved-cpu-list)
 
+### ❌ Set CPU Mask to 0x300000
+
+Since some hardware platforms pin crucial processes to the lower-numbered CPUs, we attempted to set the lhv2 cpumask to 0x300000 (which maps to CPUs 20 and 21). However, workqueue lockups still occurred.
+
 ### ❌ CPU Isolation
 
 The following kernel parameters were tested:
@@ -177,42 +181,7 @@ Jun 25 07:45:15 hp-161-tink-system kernel: nvme nvme0: failed to connect queue: 
 
 - Workqueue lockups still happened.
 - Kubelet became unresponsive after several minutes.
-- SSD disappear after several minutes
 - The node could transition into an unhealthy state.
-
-```
-NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
-loop0    7:0    0    3G  1 loop /
-sda      8:0    0  1.6T  0 disk
-├─sda1   8:1    0   64M  0 part
-├─sda2   8:2    0   50M  0 part /oem
-├─sda3   8:3    0    8G  0 part
-├─sda4   8:4    0   15G  0 part /run/initramfs/cos-state
-├─sda5   8:5    0  150G  0 part /var/lib/kubelet/pods/31724c46-6cb0-48b5-85d7-e653f1d2feb4/volume-subpaths/multus-cfg/kube-rke2-multus/2
-│                               /var/lib/longhorn
-│                               /var/crash
-│                               /var/lib/third-party
-│                               /var/lib/cni
-│                               /var/lib/NetworkManager
-│                               /var/lib/wicked
-│                               /var/lib/kubelet
-│                               /var/lib/rancher
-│                               /var/log
-│                               /usr/libexec
-│                               /root
-│                               /opt
-│                               /home
-│                               /etc/pki/trust/anchors
-│                               /etc/cni
-│                               /etc/nvme
-│                               /etc/iscsi
-│                               /etc/ssh
-│                               /etc/rancher
-│                               /etc/systemd
-│                               /etc/NetworkManager
-│                               /usr/local
-└─sda6   8:6    0  1.5T  0 part /var/lib/harvester/defaultdisk
-```
 
 ### ❌ CPU Isolation + Kubelet Reserved CPUs
 
@@ -235,7 +204,6 @@ Result:
 - Workqueue lockups still happened.
 - Kubelet became unresponsive after several minutes.
 - The node could transition into an unhealthy state.
-- ssd disk disappear
 
 ### ❌ CPU Isolation + Kubelet Reserved CPUs + IRQ Affinity
 
@@ -254,7 +222,6 @@ Result:
 - No new workqueue lockup messages were observed during that test window.
 - Kubelet became unresponsive after several minutes.
 - The node could transition into an unhealthy state.
-- ssd disk disappear
 
 ### ✅ IRQ Affinity
 
